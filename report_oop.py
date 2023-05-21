@@ -14,7 +14,7 @@ class ExcelReportPlugin():
         self.output_file = output_file
     def main(self):
         df = self.read_input_file()
-        df_transform = self.transform(df)
+        df_transform = self.transform(df, 'Gender', 'Product line', 'Total', 'sum')
         self.create_output_file(df_transform)
         print('Workbook Created')
         wb = load_workbook(self.output_file)
@@ -29,18 +29,18 @@ class ExcelReportPlugin():
         max_row = wb.active.max_row
         
         self.barchart(wb.active, min_column, max_column, min_row, max_row)
-        self.add_total(max_column, max_row, min_row, wb.active)
+        self.add_total(max_column, max_row, min_row, wb.active , 'Sales Report', '2019')
         self.save_file(wb)
         self.send_to_discord(wb, webhook_url)
     def read_input_file(self):
         df = pd.read_excel(self.input_file)
         print(df.head())
         return df
-    def transform(self, df):
-        df_transform = df.pivot_table(index='Gender', 
-                                      columns='Product line', 
-                                      values='Total', 
-                                      aggfunc='sum').round()
+    def transform(self, df, index, columns, values, aggfunc):
+        df_transform = df.pivot_table(index=index, 
+                                      columns=columns, 
+                                      values=values, 
+                                      aggfunc=aggfunc).round()
         print(df_transform)
         return df_transform
     def create_output_file(self, df_transform):
@@ -69,7 +69,7 @@ class ExcelReportPlugin():
         workbook.add_chart(barchart, 'B12')
         barchart.title = 'Sales berdasarkan Produk'
         barchart.style = 2
-    def add_total(self, max_column, max_row, min_row, workbook):
+    def add_total(self, max_column, max_row, min_row, workbook,workbook_title, workbook_subtitle):
         import string
         alphabet = list(string.ascii_uppercase)
         alphabet_excel = alphabet[:max_column]
@@ -81,8 +81,8 @@ class ExcelReportPlugin():
 
         workbook[f'{alphabet_excel[0]}{max_row+1}'] = 'Total'
         
-        workbook['A1'] = 'Sales Report'
-        workbook['A2'] = '2019'
+        workbook['A1'] = workbook_title
+        workbook['A2'] = workbook_subtitle
         workbook['A1'].font = Font('Arial', bold=True, size=20)
         workbook['A2'].font = Font('Arial', bold=True, size=10)
     def save_file(self,workbook):
@@ -99,3 +99,4 @@ class ExcelReportPlugin():
         webhook.send('This is an automated report',
                      username='Sales Bot',
                      file=excel_file)
+        print('Sent to discord')
