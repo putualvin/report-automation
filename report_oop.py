@@ -5,6 +5,7 @@ from openpyxl.chart import *
 from openpyxl.chart.shapes import GraphicalProperties
 from openpyxl.chart.label import DataLabelList
 import json
+from datetime import datetime
 
 class ExcelReportPlugin():
     def __init__(self, 
@@ -34,7 +35,7 @@ class ExcelReportPlugin():
         self.send_to_discord(wb, webhook_url)
     def read_input_file(self):
         df = pd.read_excel(self.input_file)
-        
+        df['Date'] = df.Date.apply(lambda x:x.strftime('%Y-%m-%d'))
         print(df.head())
         return df
     def transform(self, df, index, index1, columns, values, aggfunc):
