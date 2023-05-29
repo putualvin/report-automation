@@ -14,7 +14,7 @@ class ExcelReportPlugin():
         self.output_file = output_file
     def main(self):
         df = self.read_input_file()
-        df_transform = self.transform(df, 'Gender', 'Product line', 'Total', 'sum')
+        df_transform = self.transform(df, 'Gender','Date','Product line', 'Total', 'sum')
         self.create_output_file(df_transform)
         print('Workbook Created')
         wb = load_workbook(self.output_file)
@@ -34,10 +34,11 @@ class ExcelReportPlugin():
         self.send_to_discord(wb, webhook_url)
     def read_input_file(self):
         df = pd.read_excel(self.input_file)
+        
         print(df.head())
         return df
-    def transform(self, df, index, columns, values, aggfunc):
-        df_transform = df.pivot_table(index=index, 
+    def transform(self, df, index, index1, columns, values, aggfunc):
+        df_transform = df.pivot_table(index=[index,index1], 
                                       columns=columns, 
                                       values=values, 
                                       aggfunc=aggfunc).round()
@@ -49,9 +50,10 @@ class ExcelReportPlugin():
                 startrow=4)
     def barchart(self, workbook, min_column, max_column, min_row, max_row):
         barchart = BarChart()
-
+        barchart.height = 20
+        barchart.width = 80
         data = Reference(workbook, 
-                        min_col=min_column+1,
+                        min_col=min_column+2,
                         max_col=max_column,
                         min_row=min_row,
                         max_row=max_row
@@ -59,14 +61,14 @@ class ExcelReportPlugin():
 
         categories = Reference(workbook,
                                 min_col=min_column,
-                                max_col=min_column,
+                                max_col=min_column+1,
                                 min_row=min_row+1,
                                 max_row=max_row
                                 )
 
         barchart.add_data(data, titles_from_data=True)
         barchart.set_categories(categories)
-        workbook.add_chart(barchart, 'B12')
+        workbook.add_chart(barchart, 'J5')
         barchart.title = 'Sales berdasarkan Produk'
         barchart.style = 2
     def add_total(self, max_column, max_row, min_row, workbook,workbook_title, workbook_subtitle):
